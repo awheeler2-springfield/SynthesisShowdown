@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="UTF-8">
+<title>Synthesis Showdown</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  :root{
+    --maroon:#7a0019;
+    --maroon2:#a10f2b;
+    --ink:#0b0b0b;
+    --bg:#ffffff;
+    --panel:#ffffff;
+    --soft:#f5f5f7;
+    --line:#d6d6da;
+  }
+
+  body{
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    padding: 20px;
+    margin: 0;
+  }
+
+  .wrap{ max-width: 980px; margin: 0 auto; }
+
+  header{
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom: 14px;
+  }
+
+  h1{
+    margin:0;
+    color:var(--maroon);
+    letter-spacing:.2px;
+    font-size: 28px;
+  }
+
+  .sub{
+    color:#333;
+    font-size:13px;
+    margin-top:4px;
+  }
+
+  .badge{
+    border:1px solid var(--line);
+    background: linear-gradient(180deg, #fff, var(--soft));
+    padding:8px 10px;
+    border-radius:999px;
+    font-size:12px;
+    display:inline-flex;
+    gap:8px;
+    align-items:center;
+    box-shadow: 0 1px 0 rgba(0,0,0,.03);
+  }
+  .dot{width:10px;height:10px;border-radius:999px;background:var(--maroon);display:inline-block}
+
+  .section{
+    border:1px solid var(--line);
+    background: var(--panel);
+    padding: 14px;
+    margin-bottom: 14px;
+    border-radius: 14px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.04);
+  }
+
+  .grid2{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap:12px;
+  }
+  @media (max-width: 860px){ .grid2{ grid-template-columns:1fr; } header{flex-direction:column; align-items:flex-start;} }
+
+  label{
+    font-size:12px;
+    font-weight:700;
+    color:#222;
+    display:block;
+    margin-top:10px;
+    margin-bottom:6px;
+  }
+
+  input, select, textarea{
+    width:100%;
+    padding:10px 10px;
+    border-radius:10px;
+    border:1px solid var(--line);
+    background:#fff;
+    color:var(--ink);
+    font-size:14px;
+    outline:none;
+  }
+  textarea{ min-height: 110px; resize: vertical; }
+
+  .row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+  .rowRight{ display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap; }
+
+  button{
+    padding:10px 14px;
+    border-radius: 12px;
+    border:1px solid var(--line);
+    background: #fff;
+    cursor:pointer;
+    font-weight:800;
+    letter-spacing:.2px;
+  }
+  button.primary{
+    background: linear-gradient(180deg, var(--maroon2), var(--maroon));
+    border-color: var(--maroon);
+    color:white;
+  }
+  button.secondary{
+    background: linear-gradient(180deg, #fff, var(--soft));
+  }
+
+  #roundDisplay{
+    font-size:18px;
+    font-weight:900;
+    color:var(--maroon);
+    margin-bottom:6px;
+  }
+
+  #teamTurn{
+    font-weight:800;
+    font-size:15px;
+  }
+
+  #roundInstructions{
+    margin-top:6px;
+    padding:10px;
+    border-radius:12px;
+    background: #fff7f8;
+    border:1px solid #f0c9d1;
+  }
+
+  .hint{
+    color:#222;
+    font-size:13px;
+  }
+
+  .scoreNote{
+    margin-top:10px;
+    border-left: 6px solid var(--maroon);
+    padding:10px 12px;
+    background: #fff;
+    border-radius: 12px;
+    border:1px solid var(--line);
+  }
+
+  .scoreGood{ color: #0c6b3e; font-weight:800; }
+  .scoreFix{ color: #8a4a00; font-weight:800; }
+
+  ul{ padding-left: 18px; margin: 10px 0 0 0; }
+  li{ margin-bottom: 6px; }
+
+  .leader{
+    font-weight: 900;
+    color: var(--maroon);
+  }
+
+  #winnerPanel{
+    font-size: 22px;
+    font-weight: 1000;
+    color: var(--maroon);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+
+  .hidden{ display:none; }
+
+  /* Confetti canvas overlay */
+  #confettiCanvas{
+    position: fixed;
+    top:0; left:0;
+    width:100vw; height:100vh;
+    pointer-events:none;
+    z-index: 9999;
+  }
+</style>
+<link rel="stylesheet" href="https://templates.lcs.brightspace.com/lib/assets/css/styles.min.css"></head><body style="color: rgb(32, 33, 34); font-family: arial, helvetica, sans-serif; font-size: 14px;"><p><canvas id="confettiCanvas" class="hidden"></canvas></p>
+<div class="wrap"><header>
+<div>
+<h1>🏆 Synthesis Showdown</h1>
+<div class="sub">Three rounds. Choose a Pollan claim + egg evidence + relationship word. Write a short explanation.</div>
+</div>
+<div class="badge"><span class="dot"></span><span><strong>High-contrast mode</strong> · White/Black/Maroon</span></div>
+</header>
+<div class="section">
+<div class="grid2">
+<div><label>Add team</label> <input id="teamName" placeholder="Enter team name" type="text">
+<div class="row"><button class="primary" onclick="addTeam()">Add Team</button> <button class="secondary" onclick="startGame()">Start Game</button></div>
+</div>
+<div><label>Settings</label>
+<div class="row"><button class="secondary" onclick="toggleSound()">Toggle Sound</button> <span id="soundStatus" class="hint">Sound: OFF</span></div>
+<div class="hint" style="margin-top: 8px;">Tip: Rotate the laptop to each team for their turn, or project and let them call choices aloud.</div>
+</div>
+</div>
+</div>
+<div id="gameArea" class="section hidden">
+<div id="roundDisplay"></div>
+<div id="teamTurn"></div>
+<div id="roundInstructions"></div>
+<div class="grid2">
+<div><label>Pollan Claim</label><select id="pollan"></select></div>
+<div><label>Egg Evidence</label><select id="egg"></select></div>
+</div>
+<label>Relationship</label><select id="relationship">
+<option>Supports</option>
+<option>Shows</option>
+<option>Gives an example of</option>
+<option>Helps explain</option>
+</select><label>Explanation</label> <textarea id="explanation" placeholder="Write your explanation. Round 1: 2–3 sentences. Round 3: 4–6 sentences."></textarea>
+<div class="rowRight"><button class="primary" onclick="submitTurn()">Submit Turn</button></div>
+<div id="scoreFeedback" class="scoreNote hidden"></div>
+</div>
+<div class="section">
+<div class="row" style="justify-content: space-between;">
+<h3 style="color: var(--maroon); margin: 0;">Scoreboard</h3>
+<div class="hint">Leader is marked with 👑</div>
+</div>
+<ul id="scoreList"></ul>
+</div>
+<div id="winnerPanel" class="section hidden"></div>
+</div>
+<p><script>
+let teams = [];
+let currentTeam = 0;
+let round = 1;
+let soundOn = false;
+const maxRounds = 3;
+
+const roundData = {
+  1: {
+    pollan: [
+      "Consolidation makes the food system fragile.",
+      "Large-scale production reduces flexibility.",
+      "Fewer producers means greater risk during disruption."
+    ],
+    egg: [
+      "50 million hens were lost to avian flu.",
+      "Egg supply dropped dramatically in one season.",
+      "Production declined due to disease outbreaks."
+    ],
+    instructions: "Round 1: Match & Connect — Write 2–3 sentences. Use a relationship word and include 'because.'"
+  },
+  2: {
+    pollan: [
+      "The system prioritizes efficiency over resilience.",
+      "Backup systems have been eliminated.",
+      "The food system is optimized for profit, not stability."
+    ],
+    egg: [
+      "Demand remained high despite rising prices.",
+      "Consumers continued buying eggs at higher cost.",
+      "Retail prices stayed high even as wholesale shifted."
+    ],
+    instructions: "Round 2: Move to Structure — Add ONE sentence explaining what this reveals structurally (use the word 'structure' or 'system')."
+  },
+  3: {
+    pollan: [
+      "Industrial design increases vulnerability.",
+      "Centralized systems amplify disruptions.",
+      "System structure shapes price volatility."
+    ],
+    egg: [
+      "Spot market pricing determines value.",
+      "Contracts are tied to daily commodity prices.",
+      "Commodity markets discover price through bidding."
+    ],
+    instructions: "Round 3: Final Paragraph — Write 4–6 sentences. Include one 'why this matters' sentence (use 'matters' or 'this matters because')."
+  }
+};
+
+function addTeam() {
+  const name = document.getElementById("teamName").value.trim();
+  if (!name) return;
+  teams.push({ name, score: 0 });
+  document.getElementById("teamName").value = "";
+  updateScores();
+}
+
+function startGame() {
+  if (teams.length < 2) {
+    alert("Please add at least two teams.");
+    return;
+  }
+  document.getElementById("winnerPanel").classList.add("hidden");
+  document.getElementById("gameArea").classList.remove("hidden");
+  round = 1;
+  currentTeam = 0;
+  loadOptions();
+  updateTurnDisplay();
+  updateInstructions();
+  clearFeedback();
+}
+
+function loadOptions() {
+  const p = document.getElementById("pollan");
+  const e = document.getElementById("egg");
+  p.innerHTML = "";
+  e.innerHTML = "";
+
+  roundData[round].pollan.forEach(text => {
+    const opt = document.createElement("option");
+    opt.text = text;
+    p.add(opt);
+  });
+
+  roundData[round].egg.forEach(text => {
+    const opt = document.createElement("option");
+    opt.text = text;
+    e.add(opt);
+  });
+}
+
+function updateTurnDisplay() {
+  document.getElementById("roundDisplay").innerText = "Round " + round + " of 3";
+  document.getElementById("teamTurn").innerText = "Team: " + teams[currentTeam].name;
+}
+
+function updateInstructions() {
+  document.getElementById("roundInstructions").innerHTML =
+    "<div class='hint'><strong>Instructions:</strong> " + roundData[round].instructions + "</div>";
+}
+
+function clearFeedback(){
+  const box = document.getElementById("scoreFeedback");
+  box.classList.add("hidden");
+  box.innerHTML = "";
+}
+
+function submitTurn() {
+  const explanationRaw = document.getElementById("explanation").value.trim();
+  const explanation = explanationRaw.toLowerCase();
+
+  const rel = document.getElementById("relationship").value;
+
+  // Tightened scoring, but not harder:
+  // - focuses on the same simple moves: because, length, avoid "both texts", round-specific keyword
+  let points = 0;
+  const good = [];
+  const fix = [];
+
+  // 1) Relationship present (always true from select, but we still reward using it in writing)
+  if (explanation.includes(rel.toLowerCase()) || explanation.includes("relationship") === false) {
+    // We don't require the exact word; we just want it used conceptually.
+    points += 1; good.push("You named a relationship between the texts.");
+  }
+
+  // 2) Because (core reasoning)
+  if (explanation.includes("because")) { points += 2; good.push("You used 'because' to show reasoning."); }
+  else { fix.push("Add 'because' to explain the connection."); }
+
+  // 3) Avoid summary-only phrasing
+  if (!explanation.includes("both texts")) { points += 1; good.push("You avoided 'both texts show' summary language."); }
+  else { fix.push("Replace “both texts show” with a relationship word (supports/shows/gives an example/helps explain)."); }
+
+  // 4) Minimal length by round (not strict)
+  const minChars = (round === 3) ? 120 : 70;
+  if (explanationRaw.length >= minChars) { points += 1; good.push("You wrote enough to develop the idea."); }
+  else { fix.push(round === 3 ? "Add 1–2 sentences to fully develop the paragraph." : "Add one more sentence to strengthen the connection."); }
+
+  // 5) Round-specific move (single keyword)
+  if (round === 2) {
+    if (explanation.includes("structure") || explanation.includes("system")) { points += 2; good.push("You moved from event to structure."); }
+    else { fix.push("Include the word 'structure' or 'system' and explain what the event reveals."); }
+  }
+  if (round === 3) {
+    if (explanation.includes("matters")) { points += 2; good.push("You included a 'why this matters' sentence."); }
+    else { fix.push("Add a sentence using 'matters' (e.g., 'This matters because…')."); }
+  }
+
+  teams[currentTeam].score += points;
+
+  showFeedback(points, good, fix);
+
+  if (soundOn) playSubmitSound();
+
+  document.getElementById("explanation").value = "";
+
+  nextTurn();
+  updateScores();
+}
+
+function showFeedback(points, good, fix){
+  const box = document.getElementById("scoreFeedback");
+  box.classList.remove("hidden");
+
+  const goodList = good.length ? "<ul>" + good.map(x=>`<li><span class="scoreGood">✓</span> ${x}</li>`).join("") + "</ul>" : "";
+  const fixList = fix.length ? "<ul>" + fix.map(x=>`<li><span class="scoreFix">↻</span> ${x}</li>`).join("") + "</ul>" : "";
+
+  box.innerHTML =
+    `<div><strong>Turn score:</strong> ${points} point(s)</div>
+     <div style="margin-top:6px;"><strong>What went well:</strong>${goodList || "<div class='hint'>—</div>"}</div>
+     <div style="margin-top:6px;"><strong>Try next time:</strong>${fixList || "<div class='hint'>Keep going—nice work.</div>"}</div>`;
+}
+
+function nextTurn() {
+  currentTeam++;
+
+  // next round when all teams have gone
+  if (currentTeam >= teams.length) {
+    currentTeam = 0;
+    round++;
+    if (round > maxRounds) {
+      endGame();
+      return;
+    }
+    loadOptions();
+  }
+
+  updateTurnDisplay();
+  updateInstructions();
+}
+
+function updateScores() {
+  const list = document.getElementById("scoreList");
+  list.innerHTML = "";
+
+  let highest = 0;
+  teams.forEach(t => { if (t.score > highest) highest = t.score; });
+
+  teams.forEach(t => {
+    const li = document.createElement("li");
+    const crown = (t.score === highest && highest > 0) ? "👑 " : "";
+    li.innerText = crown + t.name + ": " + t.score + " pts";
+    if (crown) li.classList.add("leader");
+    list.appendChild(li);
+  });
+}
+
+function endGame() {
+  document.getElementById("gameArea").classList.add("hidden");
+
+  // handle ties
+  let highest = Math.max(...teams.map(t => t.score));
+  let winners = teams.filter(t => t.score === highest);
+
+  const panel = document.getElementById("winnerPanel");
+  panel.classList.remove("hidden");
+
+  if (winners.length === 1) {
+    panel.innerHTML = `🏆 Winner: <strong>${winners[0].name}</strong> with <strong>${winners[0].score}</strong> points!`;
+  } else {
+    panel.innerHTML = `🏆 Tie Game! Winners: <strong>${winners.map(w=>w.name).join(", ")}</strong> with <strong>${highest}</strong> points!`;
+  }
+
+  if (soundOn) playWinSound();
+  launchConfetti(250);
+}
+
+function toggleSound(){
+  soundOn = !soundOn;
+  document.getElementById("soundStatus").innerText = "Sound: " + (soundOn ? "ON" : "OFF");
+}
+
+function playSubmitSound(){
+  try { new Audio("https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg").play(); } catch(e){}
+}
+function playWinSound(){
+  try { new Audio("https://actions.google.com/sounds/v1/crowds/medium_crowd_cheer.ogg").play(); } catch(e){}
+}
+
+/* Confetti (simple, local, no libraries) */
+function launchConfetti(count){
+  const canvas = document.getElementById("confettiCanvas");
+  const ctx = canvas.getContext("2d");
+  canvas.classList.remove("hidden");
+
+  function resize(){
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener("resize", resize, { passive:true });
+
+  const colors = ["#7a0019", "#111111", "#ffffff", "#a10f2b", "#444444"];
+  const pieces = [];
+  const gravity = 0.22;
+
+  for(let i=0;i<count;i++){
+    pieces.push({
+      x: Math.random()*canvas.width,
+      y: -20 - Math.random()*canvas.height*0.2,
+      w: 6 + Math.random()*6,
+      h: 8 + Math.random()*10,
+      vx: -2 + Math.random()*4,
+      vy: 2 + Math.random()*5,
+      rot: Math.random()*Math.PI,
+      vr: -0.2 + Math.random()*0.4,
+      color: colors[Math.floor(Math.random()*colors.length)],
+      life: 200 + Math.floor(Math.random()*100)
+    });
+  }
+
+  let frame = 0;
+  function tick(){
+    frame++;
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    for(const p of pieces){
+      p.vy += gravity;
+      p.x += p.vx;
+      p.y += p.vy;
+      p.rot += p.vr;
+      p.life--;
+
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+      ctx.restore();
+    }
+
+    // remove dead / offscreen
+    for(let i=pieces.length-1;i>=0;i--){
+      const p = pieces[i];
+      if(p.life<=0 || p.y>canvas.height+50) pieces.splice(i,1);
+    }
+
+    if(pieces.length>0 && frame<600){
+      requestAnimationFrame(tick);
+    } else {
+      canvas.classList.add("hidden");
+      window.removeEventListener("resize", resize);
+    }
+  }
+  requestAnimationFrame(tick);
+}
+</script></p>
+<p></p></body></html>
